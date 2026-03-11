@@ -1,0 +1,223 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  email        String   @unique
+  role         UserRole @default(ADMIN)
+  firstName    String?
+  lastName     String?
+  phone        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Owner {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  email        String   @unique
+  phone        String
+  firstName    String?
+  lastName     String?
+  pets         Pet[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Pet {
+  id             String          @id @default(cuid())
+  name           String
+  sex            PetSex?
+  breed          String?
+  color          String?
+  birthDate      DateTime?
+  weight         Float?
+  allergies      String?
+  notes          String?
+  ownerId        String
+  owner          Owner           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  petTypeId      Int
+  petType        PetType         @relation(fields: [petTypeId], references: [id])
+  appointments   Appointment[]
+  vaccineRecords VaccineRecord[]
+  studyRecords   StudyRecord[]
+  surgeryRecords SurgeryRecord[]
+  reminders      Reminder[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model PetType {
+  id        Int    @id @default(autoincrement())
+  type      String @unique
+  pets      Pet[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Service {
+  id           Int    @id @default(autoincrement())
+  name         String
+  description  String?
+  price        Float
+  durationMin  Int?
+  isActive     Boolean @default(true)
+  appointments Appointment[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  ownerName   String
+  phone       String
+  email       String
+  petId       String
+  pet         Pet               @relation(fields: [petId], references: [id], onDelete: Cascade)
+  serviceId   Int
+  service     Service           @relation(fields: [serviceId], references: [id])
+  date        DateTime
+  reason      String?
+  notes       String?
+  status      AppointmentStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model VaccineRecord {
+  id               String       @id @default(cuid())
+  petId            String
+  pet              Pet          @relation(fields: [petId], references: [id], onDelete: Cascade)
+  vaccineName      String
+  doseNumber       Int?
+  applicationDate  DateTime
+  nextDoseDate     DateTime?
+  batchNumber      String?
+  manufacturer     String?
+  veterinarianName String?
+  notes            String?
+  status           RecordStatus @default(ACTIVE)
+  reminders        Reminder[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model StudyRecord {
+  id              String       @id @default(cuid())
+  petId           String
+  pet             Pet          @relation(fields: [petId], references: [id], onDelete: Cascade)
+  studyType       StudyType
+  studyName       String
+  studyDate       DateTime
+  resultSummary   String?
+  fileUrl         String?
+  nextControlDate DateTime?
+  notes           String?
+  status          RecordStatus @default(ACTIVE)
+  reminders       Reminder[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model SurgeryRecord {
+  id                 String       @id @default(cuid())
+  petId              String
+  pet                Pet          @relation(fields: [petId], references: [id], onDelete: Cascade)
+  surgeryName        String
+  surgeryDate        DateTime
+  diagnosis          String?
+  procedureDetails   String?
+  postoperativeNotes String?
+  nextCheckDate      DateTime?
+  status             RecordStatus @default(ACTIVE)
+  reminders          Reminder[]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Reminder {
+  id              String         @id @default(cuid())
+  petId           String
+  pet             Pet            @relation(fields: [petId], references: [id], onDelete: Cascade)
+  type            ReminderType
+  title           String
+  description     String?
+  remindAt        DateTime
+  status          ReminderStatus @default(PENDING)
+  sentAt          DateTime?
+  vaccineRecordId String?
+  vaccineRecord   VaccineRecord? @relation(fields: [vaccineRecordId], references: [id])
+  studyRecordId   String?
+  studyRecord     StudyRecord?   @relation(fields: [studyRecordId], references: [id])
+  surgeryRecordId String?
+  surgeryRecord   SurgeryRecord? @relation(fields: [surgeryRecordId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  VET
+  RECEPTIONIST
+}
+
+enum PetSex {
+  MALE
+  FEMALE
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum RecordStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum StudyType {
+  LAB
+  XRAY
+  ULTRASOUND
+  BLOODWORK
+  URINE
+  STOOL
+  OTHER
+}
+
+enum ReminderType {
+  VACCINE
+  STUDY
+  SURGERY
+  FOLLOW_UP
+  DEWORMING
+  GROOMING
+  APPOINTMENT
+  OTHER
+}
+
+enum ReminderStatus {
+  PENDING
+  SENT
+  CANCELLED
+}
