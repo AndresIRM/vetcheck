@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../app/generated/prisma"
@@ -24,6 +18,14 @@ model User {
   phone        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  lat          Decimal? @db.Decimal(9, 6)
+  lng          Decimal? @db.Decimal(9, 6)
+
+  vaccineRecords       VaccineRecord[]       @relation("VaccineRecordCreatedBy")
+  studyRecords         StudyRecord[]         @relation("StudyRecordCreatedBy")
+  surgeryRecords       SurgeryRecord[]       @relation("SurgeryRecordCreatedBy")
+  reminders            Reminder[]            @relation("ReminderCreatedBy")
+  generalConsultations GeneralConsultation[] @relation("GeneralConsultationCreatedBy")
 }
 
 model Owner {
@@ -40,69 +42,76 @@ model Owner {
 }
 
 model Pet {
-  id             String          @id @default(cuid())
-  name           String
-  sex            PetSex?
-  breed          String?
-  color          String?
-  birthDate      DateTime?
-  weight         Float?
-  allergies      String?
-  notes          String?
-  ownerId        String
-  owner          Owner           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  petTypeId      Int
-  petType        PetType         @relation(fields: [petTypeId], references: [id])
-  appointments   Appointment[]
-  vaccineRecords VaccineRecord[]
-  studyRecords   StudyRecord[]
-  surgeryRecords SurgeryRecord[]
-  reminders      Reminder[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id                   String                @id @default(cuid())
+  shortId              String                @unique @db.VarChar(5)
+  status               PetStatus             @default(ACTIVE)
+  name                 String
+  sex                  PetSex?
+  breed                String?
+  color                String?
+  birthDate            DateTime?
+  weight               Float?
+  allergies            String?
+  notes                String?
+  ownerId              String
+  owner                Owner                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  petTypeId            Int
+  petType              PetType               @relation(fields: [petTypeId], references: [id])
+  appointments         Appointment[]
+  vaccineRecords       VaccineRecord[]
+  studyRecords         StudyRecord[]
+  surgeryRecords       SurgeryRecord[]
+  generalConsultations GeneralConsultation[]
+  reminders            Reminder[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 }
 
 model PetType {
-  id        Int    @id @default(autoincrement())
-  type      String @unique
+  id        Int      @id @default(autoincrement())
+  type      String   @unique
   pets      Pet[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Service {
-  id           Int    @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   name         String
   description  String?
   price        Float
   durationMin  Int?
-  isActive     Boolean @default(true)
+  isActive     Boolean       @default(true)
   appointments Appointment[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Appointment {
-  id          String            @id @default(cuid())
-  ownerName   String
-  phone       String
-  email       String
-  petId       String
-  pet         Pet               @relation(fields: [petId], references: [id], onDelete: Cascade)
-  serviceId   Int
-  service     Service           @relation(fields: [serviceId], references: [id])
-  date        DateTime
-  reason      String?
-  notes       String?
-  status      AppointmentStatus @default(PENDING)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String            @id @default(cuid())
+  ownerName String
+  phone     String
+  email     String
+  petId     String
+  pet       Pet               @relation(fields: [petId], references: [id], onDelete: Cascade)
+  serviceId Int
+  service   Service           @relation(fields: [serviceId], references: [id])
+  date      DateTime
+  reason    String?
+  notes     String?
+  status    AppointmentStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 }
 
 model VaccineRecord {
-  id               String       @id @default(cuid())
-  petId            String
-  pet              Pet          @relation(fields: [petId], references: [id], onDelete: Cascade)
+  id              String  @id @default(cuid())
+  petId           String
+  createdByUserId String?
+
+  pet           Pet   @relation(fields: [petId], references: [id], onDelete: Cascade)
+  createdByUser User? @relation("VaccineRecordCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
   vaccineName      String
   doseNumber       Int?
   applicationDate  DateTime
@@ -113,14 +122,18 @@ model VaccineRecord {
   notes            String?
   status           RecordStatus @default(ACTIVE)
   reminders        Reminder[]
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 }
 
 model StudyRecord {
-  id              String       @id @default(cuid())
+  id              String  @id @default(cuid())
   petId           String
-  pet             Pet          @relation(fields: [petId], references: [id], onDelete: Cascade)
+  createdByUserId String?
+
+  pet           Pet   @relation(fields: [petId], references: [id], onDelete: Cascade)
+  createdByUser User? @relation("StudyRecordCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
   studyType       StudyType
   studyName       String
   studyDate       DateTime
@@ -130,14 +143,18 @@ model StudyRecord {
   notes           String?
   status          RecordStatus @default(ACTIVE)
   reminders       Reminder[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 }
 
 model SurgeryRecord {
-  id                 String       @id @default(cuid())
-  petId              String
-  pet                Pet          @relation(fields: [petId], references: [id], onDelete: Cascade)
+  id              String  @id @default(cuid())
+  petId           String
+  createdByUserId String?
+
+  pet           Pet   @relation(fields: [petId], references: [id], onDelete: Cascade)
+  createdByUser User? @relation("SurgeryRecordCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
   surgeryName        String
   surgeryDate        DateTime
   diagnosis          String?
@@ -146,28 +163,55 @@ model SurgeryRecord {
   nextCheckDate      DateTime?
   status             RecordStatus @default(ACTIVE)
   reminders          Reminder[]
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 }
 
 model Reminder {
-  id              String         @id @default(cuid())
+  id              String  @id @default(cuid())
   petId           String
-  pet             Pet            @relation(fields: [petId], references: [id], onDelete: Cascade)
-  type            ReminderType
-  title           String
-  description     String?
-  remindAt        DateTime
-  status          ReminderStatus @default(PENDING)
-  sentAt          DateTime?
+  createdByUserId String?
+
+  pet           Pet   @relation(fields: [petId], references: [id], onDelete: Cascade)
+  createdByUser User? @relation("ReminderCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  type        ReminderType
+  title       String
+  description String?
+  remindAt    DateTime
+  status      ReminderStatus @default(PENDING)
+  sentAt      DateTime?
+
   vaccineRecordId String?
-  vaccineRecord   VaccineRecord? @relation(fields: [vaccineRecordId], references: [id])
-  studyRecordId   String?
-  studyRecord     StudyRecord?   @relation(fields: [studyRecordId], references: [id])
+  vaccineRecord   VaccineRecord? @relation(fields: [vaccineRecordId], references: [id], onDelete: SetNull)
+
+  studyRecordId String?
+  studyRecord   StudyRecord? @relation(fields: [studyRecordId], references: [id], onDelete: SetNull)
+
   surgeryRecordId String?
-  surgeryRecord   SurgeryRecord? @relation(fields: [surgeryRecordId], references: [id])
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  surgeryRecord   SurgeryRecord? @relation(fields: [surgeryRecordId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GeneralConsultation {
+  id              String  @id @default(cuid())
+  petId           String
+  createdByUserId String?
+
+  reason           String
+  diagnosis        String?
+  generalNotes     String?
+  treatment        String?
+  nextRevisionDate DateTime?
+  status           RecordStatus @default(ACTIVE)
+
+  pet           Pet   @relation(fields: [petId], references: [id], onDelete: Cascade)
+  createdByUser User? @relation("GeneralConsultationCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum UserRole {
@@ -220,4 +264,9 @@ enum ReminderStatus {
   PENDING
   SENT
   CANCELLED
+}
+
+enum PetStatus {
+  ACTIVE
+  INACTIVE
 }
