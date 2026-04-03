@@ -229,7 +229,7 @@ export default function LoginPage() {
         <div className={styles.leftPanel}>
           <div className={styles.logoWrapper}>
             <img
-              src="/images/logo-vetcheck.png"
+              src="/images/logo_vetcheck_verde.png"
               alt="VetCheck"
               className={styles.logo}
             />
