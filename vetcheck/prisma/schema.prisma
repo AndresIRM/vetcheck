@@ -8,24 +8,27 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  passwordHash String
-  email        String   @unique
-  role         UserRole @default(ADMIN)
-  firstName    String?
-  lastName     String?
-  phone        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  lat          Decimal? @db.Decimal(9, 6)
-  lng          Decimal? @db.Decimal(9, 6)
+  id                   String                @id @default(cuid())
+  username             String                @unique
+  passwordHash         String
+  email                String                @unique
+  role                 UserRole              @default(ADMIN)
+  firstName            String?
+  lastName             String?
+  phone                String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  lat                  Decimal?              @db.Decimal(9,6)
+  lng                  Decimal?              @db.Decimal(9,6)
 
   vaccineRecords       VaccineRecord[]       @relation("VaccineRecordCreatedBy")
   studyRecords         StudyRecord[]         @relation("StudyRecordCreatedBy")
   surgeryRecords       SurgeryRecord[]       @relation("SurgeryRecordCreatedBy")
   reminders            Reminder[]            @relation("ReminderCreatedBy")
   generalConsultations GeneralConsultation[] @relation("GeneralConsultationCreatedBy")
+
+  assignedAppointments Appointment[]         @relation("AppointmentAssignedVet")
+  availabilityRules    VetAvailability[]
 }
 
 model Owner {
@@ -88,20 +91,40 @@ model Service {
 }
 
 model Appointment {
-  id        String            @id @default(cuid())
-  ownerName String
-  phone     String
-  email     String
-  petId     String
-  pet       Pet               @relation(fields: [petId], references: [id], onDelete: Cascade)
-  serviceId Int
-  service   Service           @relation(fields: [serviceId], references: [id])
-  date      DateTime
-  reason    String?
-  notes     String?
-  status    AppointmentStatus @default(PENDING)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  id            String            @id @default(cuid())
+  ownerName     String
+  phone         String
+  email         String
+  petId         String
+  pet           Pet               @relation(fields: [petId], references: [id], onDelete: Cascade)
+  serviceId     Int
+  service       Service           @relation(fields: [serviceId], references: [id])
+
+  assignedVetId String?
+  assignedVet   User?             @relation("AppointmentAssignedVet", fields: [assignedVetId], references: [id], onDelete: SetNull)
+
+  date          DateTime
+  reason        String?
+  notes         String?
+  status        AppointmentStatus @default(PENDING)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model VetAvailability {
+  id          String   @id @default(cuid())
+  vetId       String
+  vet         User     @relation(fields: [vetId], references: [id], onDelete: Cascade)
+
+  dayOfWeek   DayOfWeek
+  startTime   String   @db.VarChar(5) // "14:00"
+  endTime     String   @db.VarChar(5) // "17:00"
+  isWorking   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([vetId, dayOfWeek])
 }
 
 model VaccineRecord {
@@ -269,4 +292,15 @@ enum ReminderStatus {
 enum PetStatus {
   ACTIVE
   INACTIVE
+}
+
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
 }

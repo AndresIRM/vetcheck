@@ -7,6 +7,8 @@ import PetSummary from "./PetSummary";
 import PetEditableForm, { PetEditableFormValues } from "./PetEditableForm";
 import RecordSection from "./RecordSection";
 import TimelineCard from "./TimelineCard";
+import MyAppointmentsModal from "./MyAppoinments";
+import VetAvailabilityModal from "./VetAvailabilityModal";
 
 type CreatedByUser = {
   id: string;
@@ -223,6 +225,8 @@ export default function VetDashboard() {
   const [studyForm, setStudyForm] = useState<StudyForm>(initialStudyForm);
   const [surgeryForm, setSurgeryForm] = useState<SurgeryForm>(initialSurgeryForm);
   const [reminderForm, setReminderForm] = useState<ReminderForm>(initialReminderForm);
+  const [appointmentsOpen, setAppointmentsOpen] = useState(false);
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
 
   const ownerFullName = useMemo(() => {
     if (!data?.pet.owner) return "Sin nombre";
@@ -425,17 +429,44 @@ export default function VetDashboard() {
                 registra consultas, vacunas, estudios, cirugías y recordatorios.
               </p>
             </div>
+            <div className={styles.heroActions}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setAppointmentsOpen(true)}
+              >
+                Mis citas
+              </button>
 
-            <button
-              type="button"
-              className={styles.logoutButton}
-              onClick={() => {
-                window.location.href = "/login";
-              }}
-            >
-              Salir
-            </button>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setAvailabilityOpen(true)}
+              >
+                Mi horario
+              </button>
+
+              <button
+                type="button"
+                className={styles.logoutButton}
+                onClick={() => {
+                  window.location.href = "/login";
+                }}
+              >
+                Salir
+              </button>
+            </div>
           </div>
+
+          <MyAppointmentsModal
+            open={appointmentsOpen}
+            onClose={() => setAppointmentsOpen(false)}
+          />
+
+          <VetAvailabilityModal
+            open={availabilityOpen}
+            onClose={() => setAvailabilityOpen(false)}
+          />
 
           <SearchBar
             value={shortId}
