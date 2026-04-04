@@ -24,6 +24,21 @@ export async function GET() {
       );
     }
 
+    const services = await prisma.service.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        durationMin: true,
+      },
+    });
+
     const owner = await prisma.owner.findUnique({
       where: { id: payload.sub },
       include: {
@@ -123,6 +138,7 @@ export async function GET() {
         reminders: pet.reminders,
       })),
       upcomingEvents,
+      services,
     });
   } catch (error) {
     console.error("OWNER_DASHBOARD_ERROR", error);

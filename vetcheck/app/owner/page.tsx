@@ -12,6 +12,10 @@ import {
 } from "./ownerApi";
 import { logoutApi } from "../login/apiLogin";
 import QRCode from "react-qr-code";
+import dynamic from "next/dynamic";
+import OwnerAppointmentsModal from "./components/OwnerAppoinment";
+import ScheduleAppointmentModal from "./components/ScheduleMap";
+
 type PetFormState = {
     name: string;
     petTypeId: string;
@@ -95,6 +99,9 @@ export default function OwnerPage() {
     const [qrPet, setQrPet] = useState<{ id: string; name: string; shortId: string } | null>(null);
 
     const [petForm, setPetForm] = useState<PetFormState>(initialPetForm);
+
+    const [scheduleOpen, setScheduleOpen] = useState(false);
+    const [appointmentsOpen, setAppointmentsOpen] = useState(false);
 
     const loadData = async () => {
         try {
@@ -265,6 +272,8 @@ export default function OwnerPage() {
                         </p>
                     </section>
                 </div>
+
+
             </main>
         );
     }
@@ -279,14 +288,33 @@ export default function OwnerPage() {
                     <div className={styles.heroTop}>
                         <span className={styles.badge}>Panel del dueño</span>
 
-                        <button
-                            type="button"
-                            className={styles.logoutButton}
-                            onClick={handleLogout}
-                            disabled={loggingOut}
-                        >
-                            {loggingOut ? "Saliendo..." : "Cerrar sesión"}
-                        </button>
+                        <div className={styles.heroActions}>
+                            <button
+                                type="button"
+                                className={styles.secondaryButton}
+                                onClick={() => setScheduleOpen(true)}
+                                disabled={!data?.pets?.length}
+                            >
+                                Agendar cita
+                            </button>
+
+                            <button
+                                type="button"
+                                className={styles.secondaryButton}
+                                onClick={() => setAppointmentsOpen(true)}
+                            >
+                                Mis citas
+                            </button>
+
+                            <button
+                                type="button"
+                                className={styles.logoutButton}
+                                onClick={handleLogout}
+                                disabled={loggingOut}
+                            >
+                                {loggingOut ? "Saliendo..." : "Cerrar sesión"}
+                            </button>
+                        </div>
                     </div>
 
                     <h1 className={styles.heroTitle}>
@@ -488,7 +516,7 @@ export default function OwnerPage() {
                                 </div>
 
                                 <div className={styles.formActions}>
-                            
+
 
                                     <button
                                         type="button"
@@ -704,7 +732,39 @@ export default function OwnerPage() {
                         </section>
                     </div>
                 </section>
+
+
             </div>
+
+            <ScheduleAppointmentModal
+                open={scheduleOpen}
+                onClose={() => setScheduleOpen(false)}
+                pets={
+                    data?.pets?.map((pet) => ({
+                        id: pet.id,
+                        name: pet.name,
+                        shortId: pet.shortId,
+                    })) || []
+                }
+                services={
+                    data?.services?.map((service) => ({
+                        id: service.id,
+                        name: service.name,
+                        price: service.price,
+                        durationMin: service.durationMin,
+                    })) || []
+                }
+                onCreated={async () => {
+                    setSuccessMsg("Cita agendada correctamente");
+                    await loadData();
+                }}
+            />
+
+            <OwnerAppointmentsModal
+                open={appointmentsOpen}
+                onClose={() => setAppointmentsOpen(false)}
+            />
+
 
             {qrPet ? (
                 <div className={styles.modalOverlay} onClick={() => setQrPet(null)}>
@@ -734,6 +794,8 @@ export default function OwnerPage() {
                     </div>
                 </div>
             ) : null}
+
+
         </main>
     );
 }

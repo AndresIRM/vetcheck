@@ -43,6 +43,7 @@ export type OwnerDashboardResponse = {
       remindAt: string;
       status: string;
     }>;
+    
   }>;
   upcomingEvents?: Array<{
     id: string;
@@ -56,6 +57,12 @@ export type OwnerDashboardResponse = {
       name: string;
     };
   }>;
+  services: Array<{
+  id: number;
+  name: string;
+  price: number;
+  durationMin: number | null;
+}>;
   message?: string;
 };
 
@@ -120,4 +127,145 @@ export async function updatePetStatusApi(petId: string, status: "ACTIVE" | "INAC
         body: JSON.stringify({ status }),
     });
     return res.json();
+}
+
+export type VetMapItem = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  phone: string | null;
+  lat: number | null;
+  lng: number | null;
+};
+
+export type VetAvailabilityItem = {
+  id?: string;
+  dayOfWeek:
+    | "MONDAY"
+    | "TUESDAY"
+    | "WEDNESDAY"
+    | "THURSDAY"
+    | "FRIDAY"
+    | "SATURDAY"
+    | "SUNDAY";
+  startTime: string;
+  endTime: string;
+  isWorking: boolean;
+};
+
+export type OwnerAppointmentItem = {
+  id: string;
+  ownerName: string;
+  phone: string;
+  email: string;
+  date: string;
+  reason: string | null;
+  notes: string | null;
+  status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
+  pet: {
+    id: string;
+    name: string;
+    shortId: string;
+  };
+  service: {
+    id: number;
+    name: string;
+    price: number;
+    durationMin: number | null;
+  };
+  vet: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    phone: string | null;
+    lat: number | null;
+    lng: number | null;
+  } | null;
+};
+
+export async function getVetsMapApi(): Promise<{
+  ok: boolean;
+  vets?: VetMapItem[];
+  message?: string;
+}> {
+  const res = await fetch("/api/owner/vets", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  const json = await res.json();
+  return json;
+}
+
+export async function getVetAvailabilityApi(
+  vetId: string
+): Promise<{
+  ok: boolean;
+  availability?: VetAvailabilityItem[];
+  message?: string;
+}> {
+  const res = await fetch(`/api/owner/vets/${vetId}/availability`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  const json = await res.json();
+  return json;
+}
+
+export async function createOwnerAppointmentApi(payload: {
+  petId: string;
+  serviceId: number;
+  assignedVetId: string;
+  date: string;
+  reason?: string;
+  notes?: string;
+}): Promise<{
+  ok: boolean;
+  appointment?: OwnerAppointmentItem;
+  message?: string;
+}> {
+  const res = await fetch("/api/owner/appointments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const json = await res.json();
+  return json;
+}
+
+export async function getOwnerAppointmentsApi(): Promise<{
+  ok: boolean;
+  appointments?: OwnerAppointmentItem[];
+  message?: string;
+}> {
+  const res = await fetch("/api/owner/appointments", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  const json = await res.json();
+  return json;
+}
+
+export async function cancelOwnerAppointmentApi(
+  id: string
+): Promise<{
+  ok: boolean;
+  message?: string;
+}> {
+  const res = await fetch(`/api/owner/appointments/${id}/cancel`, {
+    method: "PATCH",
+    credentials: "include",
+  });
+
+  const json = await res.json();
+  return json;
 }
