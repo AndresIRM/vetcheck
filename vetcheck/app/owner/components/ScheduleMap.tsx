@@ -227,8 +227,8 @@ export default function ScheduleAppointmentModal({
                   {availability.length ? (
                     availability.map((item) => (
                       <div key={`${item.dayOfWeek}-${item.id ?? "new"}`} className={styles.calendarMiniItem}>
-                        <p className={styles.calendarMiniItemTitle}>{dayLabels[item.dayOfWeek]}</p>
-                        <p className={styles.calendarMiniItemMeta}>
+                        <p className={styles.calendarMiniItemTitle2}>{dayLabels[item.dayOfWeek]}</p>
+                        <p className={styles.calendarMiniItemMeta2}>
                           {item.isWorking
                             ? `${item.startTime} - ${item.endTime}`
                             : "No trabaja"}

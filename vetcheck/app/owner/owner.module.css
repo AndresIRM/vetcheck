@@ -209,6 +209,19 @@
     color: #ffffff;
 }
 
+.calendarMiniItemTitle2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+    color: #009519;
+}
+.calendarMiniItemMeta {
+    margin: 6px 0 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: rgba(2, 221, 67, 0.95);
+}
+
 .calendarMiniItemMeta {
     margin: 6px 0 0 0;
     font-size: 13px;
@@ -644,14 +657,18 @@
 
 .mapWrapper {
     width: 100%;
-    border-radius: 24px;
+    height: 380px;
+    min-height: 380px;
+    border-radius: 20px;
     overflow: hidden;
-    border: 1px solid rgba(16, 24, 40, 0.08);
+    position: relative;
+    background: #eef5ef;
 }
 
 .mapContainer {
     width: 100%;
-    height: 360px;
+    height: 100%;
+    min-height: 380px;
 }
 
 .mapPopup {
